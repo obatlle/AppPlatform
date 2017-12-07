@@ -20,7 +20,7 @@ class LinksScreen extends Component {
         </Text>
         <TouchableHighlight onPress={()=> navigate('Authentication')}>
           <Text style={styles.counter}>
-            Initial screen
+            Initial screen testing github
           </Text>
         </TouchableHighlight>
         <Button title="+" onPress={increment} />
