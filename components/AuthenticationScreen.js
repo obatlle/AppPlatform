@@ -3,6 +3,9 @@ import { connect } from 'redux-zero/react';
 import { StyleSheet, Text, View, Button } from 'react-native';
 import actions from '../app/actions';
 
+import LinkList from './LinkList'
+
+
 const mapToProps = ({ count }) => ({ count });
 
 class AuthenticationScreen extends Component {
@@ -15,6 +18,7 @@ class AuthenticationScreen extends Component {
         </Text>
         <Button title="+" onPress={increment} />
         <Button title="-" onPress={decrement} />
+        <LinkList />
       </View>
     );
   }

@@ -30,6 +30,7 @@ const MainStack = StackNavigator(
       headerPressColorAndroid: Colors.white,
       headerStyle: {
         backgroundColor: Colors.orange,
+        marginTop:-65
       },
       headerTintColor: Colors.white,
     }),
