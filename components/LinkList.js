@@ -9,19 +9,17 @@ import { graphql, gql } from 'react-apollo';
 class LinkList extends Component {
 
   render() {
-
     // 1
   if (this.props.allLinksQuery && this.props.allLinksQuery.loading) {
     return <Text>Loading</Text>
   }
-
   // 2
   if (this.props.allLinksQuery && this.props.allLinksQuery.error) {
     return <Text>Error</Text>
   }
-
   // 3
   const linksToRender = this.props.allLinksQuery.allLinks
+
 
     return (
       <View>

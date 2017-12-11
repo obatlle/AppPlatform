@@ -1,15 +1,18 @@
 import React, { Component } from 'react';
 import { connect } from 'redux-zero/react';
-import { StyleSheet, Text, View, Button } from 'react-native';
+import { StyleSheet, Text, View, Button, TouchableHighlight } from 'react-native';
 import actions from '../app/actions';
 
-import LinkList from './LinkList'
 
+import LinkList from './LinkList'
 
 const mapToProps = ({ count }) => ({ count });
 
 class AuthenticationScreen extends Component {
   render() {
+
+    const { navigate } = this.props.navigation;
+
     const { count, increment, decrement } = this.props;
     return (
       <View style={styles.container}>
@@ -19,6 +22,11 @@ class AuthenticationScreen extends Component {
         <Button title="+" onPress={increment} />
         <Button title="-" onPress={decrement} />
         <LinkList />
+        <TouchableHighlight underlayColor='rgba(52, 52, 52, 0.8)' onPress={()=> navigate('CreateLink')}>
+          <View>
+            <Text >Post a new Link</Text>
+          </View>
+        </TouchableHighlight>
       </View>
     );
   }

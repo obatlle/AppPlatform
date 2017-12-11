@@ -1,37 +1,73 @@
-import React, { Component } from 'react';
-import { connect } from 'redux-zero/react';
-import { StyleSheet, Text, View, Button } from 'react-native';
-import actions from '../app/actions';
+import React, { Component } from 'react'
+import { StyleSheet, Text, View, Button, TextInput } from 'react-native';
 
-const mapToProps = ({ count }) => ({ count });
+import { graphql, gql } from 'react-apollo';
 
 class CreateLinkScreen extends Component {
-  render() {
-    const { count, increment, decrement } = this.props;
-    return (
-      <View style={styles.container}>
-        <Text style={styles.counter}>
-          { count }
-        </Text>
-        <Button title="+" onPress={increment} />
-        <Button title="-" onPress={decrement} />
-      </View>
-    );
-  }
-}
 
-export default connect(mapToProps, actions)(CreateLinkScreen);
+  state = {
+    description: '',
+    url: ''
+  }
+
+  render() {
+    return (
+      <View>
+        <View style={styles.container}>
+          <TextInput
+            value={this.state.description}
+            onChangeText={(e) => this.setState({ description: e })}
+            placeholder='A description for the link'
+            type='text'
+          />
+          <TextInput
+            value={this.state.url}
+            onChangeText={(e) => this.setState({ url: e })}
+            placeholder='The URL for the link'
+            type='text'
+          />
+        </View>
+        <Button title="Submit" onPress={() => this._createLink()}/>
+      </View>
+    )
+  }
+
+  _createLink = async () => {
+    const { description, url } = this.state
+    await this.props.createLinkMutation({
+      variables: {
+        description,
+        url
+      }
+    })
+    const { navigate } = this.props.navigation;
+    navigate('Authentication')
+  }
+};
+
+// 1
+const CREATE_LINK_MUTATION = gql`
+  # 2
+  mutation CreateLinkMutation($description: String!, $url: String!) {
+    createLink(
+      description: $description,
+      url: $url,
+    ) {
+      id
+      createdAt
+      url
+      description
+    }
+  }
+`
+
+// 3
+export default graphql(CREATE_LINK_MUTATION, { name: 'createLinkMutation' })(CreateLinkScreen)
+
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  counter: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
+    marginTop: 200,
+    height:200
   },
 });

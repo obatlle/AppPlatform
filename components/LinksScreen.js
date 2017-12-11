@@ -1,12 +1,7 @@
 import React, { Component } from 'react';
-import { connect } from 'redux-zero/react';
-import { StyleSheet, Text, View, Button, TouchableHighlight , Dimensions, TextInput, Image} from 'react-native';
-import actions from '../app/actions';
+import { StyleSheet, Text, View, TouchableHighlight , Dimensions, TextInput, Image} from 'react-native';
+
 import MapView from 'react-native-maps'
-
-import getNavigationParam from '../utils/getNavigationParam';
-
-const mapToProps = ({ count }) => ({ count });
 
 const { width, height } = Dimensions.get('window');
 
@@ -98,7 +93,6 @@ class LinksScreen extends Component {
 
     const { navigate } = this.props.navigation;
 
-    const { count, increment, decrement } = this.props;
     return (
       <View style={styles.container}>
       <MapView
@@ -141,14 +135,12 @@ class LinksScreen extends Component {
             </View>
           </View>
         </TouchableHighlight>
-        <Button title="+" onPress={increment} />
-        <Button title="-" onPress={decrement} />
       </View>
     );
   }
 }
 
-export default connect(mapToProps, actions)(LinksScreen);
+export default LinksScreen;
 
 const styles = StyleSheet.create({
   container: {
