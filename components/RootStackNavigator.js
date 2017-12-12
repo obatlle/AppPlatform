@@ -19,6 +19,9 @@ const MainStack = StackNavigator(
     Authentication: {
       screen: AuthenticationScreen,
     },
+    Search: {
+      screen: SearchScreen,
+    },
   },
   {
     initialRouteName: 'Links',
@@ -41,9 +44,6 @@ export default StackNavigator(
   {
     Main: {
       screen: MainStack,
-    },
-    Search: {
-      screen: SearchScreen,
     },
   },
   {

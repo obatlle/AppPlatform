@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { StyleSheet, Text, View, Button, TextInput } from 'react-native';
+import { getUser } from 'react-native-authentication-helpers';
 
 import { graphql, gql } from 'react-apollo';
 
@@ -33,30 +34,44 @@ class CreateLinkScreen extends Component {
   }
 
   _createLink = async () => {
+    let user = getUser();
+    if (!user) {
+      console.error('No user logged in');
+      return;
+    }
+
     const { description, url } = this.state
     await this.props.createLinkMutation({
       variables: {
         description,
-        url
+        url,
+        postedById: user.id,
       }
     })
     const { navigate } = this.props.navigation;
-    navigate('Authentication')
+    navigate('Search')
   }
 };
 
 // 1
 const CREATE_LINK_MUTATION = gql`
   # 2
-  mutation CreateLinkMutation($description: String!, $url: String!) {
+  mutation CreateLinkMutation($description: String!, $url: String!, $postedById: ID!) {
     createLink(
       description: $description,
       url: $url,
+      score: 0,
+      postedById: $postedById
     ) {
       id
       createdAt
       url
       description
+      score
+      postedBy {
+        id
+        name
+      }
     }
   }
 `

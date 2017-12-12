@@ -127,7 +127,7 @@ class LinksScreen extends Component {
             </View>
           </View>
         </View>
-        <TouchableHighlight style={styles.addTripContainer} underlayColor='rgba(52, 52, 52, 0.8)' onPress={()=> navigate('Authentication')}>
+        <TouchableHighlight style={styles.addTripContainer} underlayColor='rgba(52, 52, 52, 0.8)' onPress={()=> navigate('Search')}>
           <View style={styles.addTripAlign}>
             <Text style={styles.addTripText}>Post a trip</Text>
             <View style={styles.addTripView}>

@@ -1,12 +1,32 @@
 import React, { Component } from 'react';
 import { connect } from 'redux-zero/react';
-import { StyleSheet, Text, View, Button } from 'react-native';
+import { StyleSheet, Text, View, Button, TouchableHighlight, Alert } from 'react-native';
 import actions from '../app/actions';
+
+import { withUser, clearUser } from 'react-native-authentication-helpers';
+
+import LinkList from './LinkList'
 
 const mapToProps = ({ count }) => ({ count });
 
+
+function promptSignOut() {
+  Alert.alert(
+    'Confirm',
+    'Are you sure you want to sign out?',
+    [
+      { text: 'Sign out', onPress: clearUser },
+      { text: 'Cancel', style: 'cancel' },
+    ],
+    { cancelable: true }
+  );
+}
+
 class SearchScreen extends Component {
   render() {
+
+    const { navigate } = this.props.navigation;
+
     const { count, increment, decrement } = this.props;
     return (
       <View style={styles.container}>
@@ -15,6 +35,22 @@ class SearchScreen extends Component {
         </Text>
         <Button title="+" onPress={increment} />
         <Button title="-" onPress={decrement} />
+        <LinkList />
+        <TouchableHighlight underlayColor='rgba(52, 52, 52, 0.8)' onPress={()=> navigate('CreateLink')}>
+          <View>
+            <Text >Post a new Link from here</Text>
+          </View>
+        </TouchableHighlight>
+        <TouchableHighlight underlayColor='rgba(52, 52, 52, 0.8)' onPress={()=> navigate('Authentication')}>
+          <View>
+            <Text >Login</Text>
+          </View>
+        </TouchableHighlight>
+        <TouchableHighlight underlayColor='rgba(52, 52, 52, 0.8)' onPress={()=> promptSignOut()}>
+          <View>
+            <Text >logout</Text>
+          </View>
+        </TouchableHighlight>
       </View>
     );
   }
