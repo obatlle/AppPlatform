@@ -1,8 +1,11 @@
 import React, { Component } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, View ,  Alert, Share, AsyncStorage } from 'react-native';
 import Button from 'react-native-platform-button';
 import { setUser } from 'react-native-authentication-helpers';
 import { gql, graphql, compose } from 'react-apollo';
+
+import { Constants, Facebook, Google } from 'expo';
+
 
 import Colors from '../constants/Colors';
 import StyledTextInput from './StyledTextInput';
@@ -29,16 +32,104 @@ class AuthenticationScreen extends Component {
     };
   };
 
+
   state = {
     email: '',
     password: '',
     name: '',
+    graphcoolId: null,
+    profilePicture: null,
   };
+
+  _handleFacebookLogin = async () => {
+    const { type, token, expires } = await Facebook.logInWithReadPermissionsAsync(
+      '1201211719949057', // Replace with your own app id in standalone app
+      { permissions: ['public_profile', 'email', 'user_friends'] }
+    );
+    console.log(type);
+    console.log(token);
+    console.log(expires);
+    switch (type) {
+      case 'success': {
+        const response = await fetch(`https://graph.facebook.com/me?fields=id,first_name,last_name,picture,gender,email&access_token=${token}`);
+        const profile = await response.json();
+
+        this.setState({
+          name: profile.first_name +' '+ profile.last_name,
+          email: profile.email,
+          profilePicture: profile.picture.data.url });
+
+        await this.props.facebookLogin({
+          variables: {
+            facebookToken: token,
+          },
+        }).then(( { data } ) => {
+          console.log(data.authenticateFacebookUser.token);
+          this._storeAuthTokensLocally( data.authenticateFacebookUser.token, token, expires );
+        });
+
+
+        //this._updateUserProfile();
+        break;
+      }
+      case 'cancel': {
+        Alert.alert( 'Cancelled!', 'Login was cancelled!' );
+        break;
+      }
+      default: {
+        Alert.alert( 'Error', 'Facebook login returned error.' );
+      }
+    }
+  }
+
+  _handleGoogleLogin = async () => {
+    const { type, user, idToken, refreshToken } = await Google.logInAsync({
+      androidStandaloneAppClientId: '<ANDROID_CLIENT_ID>',
+      iosStandaloneAppClientId: '<IOS_CLIENT_ID>',
+      androidClientId: '603386649315-9rbv8vmv2vvftetfbvlrbufcps1fajqf.apps.googleusercontent.com',
+      iosClientId: '603386649315-vp4revvrcgrcjme51ebuhbkbspl048l9.apps.googleusercontent.com',
+      scopes: ['profile', 'email']
+    });
+
+    switch (type) {
+      case 'success': {
+        this.setState({
+          name: user.givenName +' '+ user.familyName,
+          email: user.email,
+          profilePicture: user.photoUrl });
+
+        await this.props.googleLogin({
+          variables: {
+            googleToken: idToken,
+          },
+        }).then(( { data } ) => {
+          this._storeAuthTokensLocally( data.authenticateGoogleUser.token, idToken, refreshToken );
+        });
+
+        //this._updateUserProfile();
+        break;
+      }
+      case 'cancel': {
+        Alert.alert( 'Cancelled!', 'Login was cancelled!' );
+        break;
+      }
+      default: {
+        Alert.alert( 'Error', 'Google login returned error.' );
+      }
+    }
+  }
+
+  _storeAuthTokensLocally = async ( graphcoolToken, socialLoginToken, socialLoginValidity ) => {
+    await AsyncStorage.setItem('graphcoolToken', graphcoolToken );
+    await AsyncStorage.setItem('socialLoginToken', socialLoginToken );
+    await AsyncStorage.setItem('socialLoginValidity', socialLoginValidity );
+  }
 
   componentWillMount() {
     this.props.navigation.setParams({
       onSubmitPress: this._confirm,
     });
+
   }
 
   render() {
@@ -103,6 +194,14 @@ class AuthenticationScreen extends Component {
                 ? 'Already have an account?'
                 : 'Need to create an account?'
             }
+          />
+          <Button
+            title="Login with Facebook"
+            onPress={() => this._handleFacebookLogin()}
+          />
+          <Button
+            title="Login with Google"
+            onPress={() => this._handleGoogleLogin()}
           />
         </View>
       </ScrollView>
@@ -200,7 +299,19 @@ const SIGNIN_USER_MUTATION = gql`
   }
 `;
 
+const facebookLoginMutation = gql`
+  mutation facebookLogin ( $facebookToken: String! )
+  { authenticateFacebookUser ( facebookToken: $facebookToken )
+    { token } }`;
+
+const googleLoginMutation = gql`
+  mutation googleLogin ( $googleToken: String! )
+  { authenticateGoogleUser ( googleToken: $googleToken )
+    { token } }`;
+
 export default compose(
+  //graphql(facebookLoginMutation, { name: 'facebookLogin' } ),
+  //graphql(googleLoginMutation, { name: 'googleLogin' } ),
   graphql(CREATE_USER_MUTATION, { name: 'createUserMutation' }),
   graphql(SIGNIN_USER_MUTATION, { name: 'signinUserMutation' })
 )(AuthenticationScreen);
