@@ -10,17 +10,7 @@ import LinkList from './LinkList'
 const mapToProps = ({ count }) => ({ count });
 
 
-function promptSignOut() {
-  Alert.alert(
-    'Confirm',
-    'Are you sure you want to sign out?',
-    [
-      { text: 'Sign out', onPress: clearUser },
-      { text: 'Cancel', style: 'cancel' },
-    ],
-    { cancelable: true }
-  );
-}
+
 
 class SearchScreen extends Component {
   _removeAsyncStorage = async ( ) => {
@@ -31,6 +21,18 @@ class SearchScreen extends Component {
       // Error saving data
       console.log('Error removing socialLoginToken')
     }
+  }
+
+  promptSignOut() {
+    Alert.alert(
+      'Confirm',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Sign out', onPress: () => {clearUser;this._removeAsyncStorage()} },
+        { text: 'Cancel', style: 'cancel' },
+      ],
+      { cancelable: true }
+    );
   }
 
   render() {
@@ -57,7 +59,7 @@ class SearchScreen extends Component {
             <Text >Login</Text>
           </View>
         </TouchableHighlight>
-        <TouchableHighlight underlayColor='rgba(52, 52, 52, 0.8)' onPress={()=> {promptSignOut(); this._removeAsyncStorage()}}>
+        <TouchableHighlight underlayColor='rgba(52, 52, 52, 0.8)' onPress={()=> {this.promptSignOut()}}>
           <View>
             <Text >logout</Text>
           </View>
