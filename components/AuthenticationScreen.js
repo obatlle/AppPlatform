@@ -43,6 +43,7 @@ class AuthenticationScreen extends Component {
     password: '',
     name: '',
     profilePicture: null,
+    isload: false
   };
 
   _handleFacebookLogin = async () => {
@@ -186,13 +187,19 @@ class AuthenticationScreen extends Component {
               const { navigate } = this.props.navigation;
               navigate('Search');
 
-            }else{
+            }else if (network=='google'){
               //Don't support memorizing the Google login token yet
+            }else{
+
             }
           }
         } catch (error) {
           // Error retrieving data
         }
+      } else {
+        this.setState({
+          isload: true
+        });
       }
     } catch (error) {
       // Error retrieving data
@@ -211,78 +218,84 @@ class AuthenticationScreen extends Component {
 
   render() {
     let showSignUpForm = inSignUpState(this.props.navigation.state);
-
-
+    const loaded = this.state.isload;
+    console.log(loaded)
     return (
-      <ScrollView keyboardShouldPersistTaps="always" style={styles.container}>
-        <View style={styles.formInputGroup}>
-          {showSignUpForm && (
+      <View style={styles.container}>
+      {loaded ===true ? (
+        <ScrollView keyboardShouldPersistTaps="always" style={styles.container}>
+          <View style={styles.formInputGroup}>
+            {showSignUpForm && (
+              <StyledTextInput
+                autoFocus={true}
+                onChangeText={name => this.setState({ name })}
+                onSubmitEditing={() => this._emailInput.focus()}
+                type="text"
+                placeholder="Your name"
+                value={this.state.name}
+              />
+            )}
             <StyledTextInput
+              autoCapitalize="none"
               autoFocus={true}
-              onChangeText={name => this.setState({ name })}
-              onSubmitEditing={() => this._emailInput.focus()}
+              ref={view => {
+                this._emailInput = view;
+              }}
+              keyboardType="email-address"
+              value={this.state.email}
+              onChangeText={email => this.setState({ email })}
+              onSubmitEditing={() => this._passwordInput.focus()}
               type="text"
-              placeholder="Your name"
-              value={this.state.name}
+              placeholder="Your email address"
             />
-          )}
-          <StyledTextInput
-            autoCapitalize="none"
-            autoFocus={true}
-            ref={view => {
-              this._emailInput = view;
-            }}
-            keyboardType="email-address"
-            value={this.state.email}
-            onChangeText={email => this.setState({ email })}
-            onSubmitEditing={() => this._passwordInput.focus()}
-            type="text"
-            placeholder="Your email address"
-          />
-          <StyledTextInput
-            lastStyledTextInputInGroup={true}
-            returnKeyType="go"
-            ref={view => {
-              this._passwordInput = view;
-            }}
-            onChangeText={password => this.setState({ password })}
-            onSubmitEditing={this._confirm}
-            secureTextEntry={true}
-            type="password"
-            placeholder={showSignUpForm ? 'Choose a safe password' : 'Password'}
-            value={this.state.password}
-          />
-        </View>
+            <StyledTextInput
+              lastStyledTextInputInGroup={true}
+              returnKeyType="go"
+              ref={view => {
+                this._passwordInput = view;
+              }}
+              onChangeText={password => this.setState({ password })}
+              onSubmitEditing={this._confirm}
+              secureTextEntry={true}
+              type="password"
+              placeholder={showSignUpForm ? 'Choose a safe password' : 'Password'}
+              value={this.state.password}
+            />
+          </View>
 
-        <View style={styles.buttonGroup}>
-          {Platform.OS === 'android' && (
+          <View style={styles.buttonGroup}>
+            {Platform.OS === 'android' && (
+              <Button
+                color="#000"
+                onPress={this._confirm}
+                title={showSignUpForm ? 'Create account' : 'Login'}
+              />
+            )}
+            <View style={styles.buttonSeparator} />
             <Button
-              color="#000"
-              onPress={this._confirm}
-              title={showSignUpForm ? 'Create account' : 'Login'}
+              color={Platform.OS === 'android' ? '#000' : Colors.orange}
+              onPress={() =>
+                this.props.navigation.setParams({ signUp: !showSignUpForm })}
+              title={
+                showSignUpForm
+                  ? 'Already have an account?'
+                  : 'Need to create an account?'
+              }
             />
-          )}
-          <View style={styles.buttonSeparator} />
-          <Button
-            color={Platform.OS === 'android' ? '#000' : Colors.orange}
-            onPress={() =>
-              this.props.navigation.setParams({ signUp: !showSignUpForm })}
-            title={
-              showSignUpForm
-                ? 'Already have an account?'
-                : 'Need to create an account?'
-            }
-          />
-          <Button
-            title="Login with Facebook"
-            onPress={() => this._handleFacebookLogin()}
-          />
-          <Button
-            title="Login with Google"
-            onPress={() => this._handleGoogleLogin()}
-          />
-        </View>
-      </ScrollView>
+            <Button
+              title="Login with Facebook"
+              onPress={() => this._handleFacebookLogin()}
+            />
+            <Button
+              title="Login with Google"
+              onPress={() => this._handleGoogleLogin()}
+            />
+          </View>
+        </ScrollView>
+      ):(
+        <View/>
+      )}
+      </View>
     );
   }
 
