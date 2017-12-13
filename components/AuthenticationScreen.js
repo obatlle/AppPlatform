@@ -10,11 +10,16 @@ import { Constants, Facebook, Google } from 'expo';
 import Colors from '../constants/Colors';
 import StyledTextInput from './StyledTextInput';
 
+
+
 function inSignUpState(navigationState) {
   return !!(navigationState.params && navigationState.params.signUp);
 }
 
 class AuthenticationScreen extends Component {
+
+
+
   static navigationOptions = ({ navigation }) => {
     const { params } = navigation.state;
     let onSubmitPress = params ? params.onSubmitPress : () => {};
@@ -37,7 +42,6 @@ class AuthenticationScreen extends Component {
     email: '',
     password: '',
     name: '',
-    graphcoolId: null,
     profilePicture: null,
   };
 
@@ -57,17 +61,31 @@ class AuthenticationScreen extends Component {
         this.setState({
           name: profile.first_name +' '+ profile.last_name,
           email: profile.email,
+          password: token,
           profilePicture: profile.picture.data.url });
 
-        await this.props.facebookLogin({
+        this._storeAuthTokensLocally( token, 'facebook' );
+        console.log('Token'+token);
+        const { name, email, password } = this.state;
+        const result = await this.props.createUserMutation({
           variables: {
-            facebookToken: token,
+            name,
+            email,
+            password,
           },
-        }).then(( { data } ) => {
-          console.log(data.authenticateFacebookUser.token);
-          this._storeAuthTokensLocally( data.authenticateFacebookUser.token, token, expires );
+        })
+        const id = result.data.signinUser.user.id;
+        console.log(id)
+        const token_cool = result.data.signinUser.token;
+        console.log(token_cool)
+        this._saveUserData(id, token_cool);
+
+        this.setState({
+          password:''
         });
 
+        const { navigate } = this.props.navigation;
+        navigate('Search');
 
         //this._updateUserProfile();
         break;
@@ -96,16 +114,32 @@ class AuthenticationScreen extends Component {
         this.setState({
           name: user.givenName +' '+ user.familyName,
           email: user.email,
+          password: idToken,
           profilePicture: user.photoUrl });
 
-        await this.props.googleLogin({
-          variables: {
-            googleToken: idToken,
-          },
-        }).then(( { data } ) => {
-          this._storeAuthTokensLocally( data.authenticateGoogleUser.token, idToken, refreshToken );
-        });
 
+          this._storeAuthTokensLocally( idToken, 'google' );
+          console.log('Token'+idToken);
+          const { name, email, password } = this.state;
+          const result = await this.props.createUserMutation({
+            variables: {
+              name,
+              email,
+              password,
+            },
+          })
+          const id = result.data.signinUser.user.id;
+          console.log(id)
+          const token_cool = result.data.signinUser.token;
+          console.log(token_cool)
+          this._saveUserData(id, token_cool);
+
+          this.setState({
+            password:''
+          });
+
+          const { navigate } = this.props.navigation;
+          navigate('Search');
         //this._updateUserProfile();
         break;
       }
@@ -119,13 +153,56 @@ class AuthenticationScreen extends Component {
     }
   }
 
-  _storeAuthTokensLocally = async ( graphcoolToken, socialLoginToken, socialLoginValidity ) => {
-    await AsyncStorage.setItem('graphcoolToken', graphcoolToken );
-    await AsyncStorage.setItem('socialLoginToken', socialLoginToken );
-    await AsyncStorage.setItem('socialLoginValidity', socialLoginValidity );
+  _storeAuthTokensLocally = async (  socialLoginToken, network ) => {
+    try {
+      await AsyncStorage.setItem('socialLoginToken', socialLoginToken);
+    } catch (error) {
+      // Error saving data
+      console.log('Error saving socialLoginToken: '+socialLoginToken)
+    }
+    try {
+      await AsyncStorage.setItem('socialNetwork', network);
+    } catch (error) {
+      // Error saving data
+      console.log('Error saving socialNetwork: '+network)
+    }
+  }
+
+  _haveSocialToken = async () => {
+    try {
+      const haveToken = await AsyncStorage.getItem('socialLoginToken');
+      if (haveToken !== null){
+        // We have data!!
+        console.log(haveToken);
+        try {
+          const network = await AsyncStorage.getItem('socialNetwork');
+          if (network !== null){
+            // We have data!!
+            console.log(network);
+            if (network == 'facebook'){
+              const response = await fetch(`https://graph.facebook.com/me?fields=id,first_name,last_name,picture,gender,email&access_token=${haveToken}`);
+              const profile = await response.json();
+              console.log(profile)
+              const { navigate } = this.props.navigation;
+              navigate('Search');
+
+            }else{
+              //Don't support memorizing the Google login token yet
+            }
+          }
+        } catch (error) {
+          // Error retrieving data
+        }
+      }
+    } catch (error) {
+      // Error retrieving data
+    }
+
   }
 
   componentWillMount() {
+    this._haveSocialToken();
+
     this.props.navigation.setParams({
       onSubmitPress: this._confirm,
     });
@@ -134,6 +211,7 @@ class AuthenticationScreen extends Component {
 
   render() {
     let showSignUpForm = inSignUpState(this.props.navigation.state);
+
 
     return (
       <ScrollView keyboardShouldPersistTaps="always" style={styles.container}>
@@ -299,19 +377,8 @@ const SIGNIN_USER_MUTATION = gql`
   }
 `;
 
-const facebookLoginMutation = gql`
-  mutation facebookLogin ( $facebookToken: String! )
-  { authenticateFacebookUser ( facebookToken: $facebookToken )
-    { token } }`;
-
-const googleLoginMutation = gql`
-  mutation googleLogin ( $googleToken: String! )
-  { authenticateGoogleUser ( googleToken: $googleToken )
-    { token } }`;
 
 export default compose(
-  //graphql(facebookLoginMutation, { name: 'facebookLogin' } ),
-  //graphql(googleLoginMutation, { name: 'googleLogin' } ),
   graphql(CREATE_USER_MUTATION, { name: 'createUserMutation' }),
   graphql(SIGNIN_USER_MUTATION, { name: 'signinUserMutation' })
 )(AuthenticationScreen);
